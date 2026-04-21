@@ -104,7 +104,7 @@ void add(char *district,char* role,char *user,float latitude,float longitude, ch
 
         if (are_drepturi==0)
         {
-            printf("ACCES RESPINS: Rolul %s nu are permisiuni de scriere in reports.dat!\n", role);
+            printf("Rolul %s nu are permisiuni de scriere in reports.dat!\n", role);
             exit(1); // am facut asta aici deoarece mentioneaza in enunt sa vf inainte de orice operatie ca avem permisiuni.
         }
     }
@@ -177,13 +177,133 @@ void add(char *district,char* role,char *user,float latitude,float longitude, ch
         close(f3);
     }
 
+}
+
+void remove_report(char *district,char *role,int id)
+{
+    if(strcmp(role,"manager")!=0)return ;
+
+    Report temp;
+    off_t write_pos;
+    off_t read_pos;
+    char path[100]="";
+    strcpy(path,district);
+    strcat(path,"/reports.dat");
+    struct stat vf;
+    if(stat(path,&vf)!=0)return ;
+
+    int are_drepturi=0;
+    if(strcmp(role,"manager")==0 && (vf.st_mode & S_IRUSR) && (vf.st_mode & S_IWUSR)) are_drepturi=1;
 
 
+    if (are_drepturi==0)
+    {
+        printf("Rolul %s nu are permisiuni de citire/scriere in reports.dat!\n", role);
+        exit(1);
+    }
 
+    int f1=open(path,O_RDWR);
+    bool ok=false;
+    while(read(f1,&temp,sizeof(Report))==sizeof(Report))
+    {
+        if(!ok && temp.id==id)
+        {
+            ok=true;
+            write_pos=lseek(f1,0,SEEK_CUR)-sizeof(Report);
+            read_pos=write_pos+sizeof(Report);
+        }
+        else if(ok)
+        {
+            lseek(f1,write_pos,SEEK_SET);
+            write(f1,&temp,sizeof(Report));
 
+            write_pos+=sizeof(Report);
+            read_pos+=sizeof(Report);
 
+            lseek(f1,read_pos,SEEK_SET);
 
+        }
+    }
+    if(ok)ftruncate(f1,vf.st_size-sizeof(Report));
 
+    close(f1);
+}
+
+void view(char *district,char* role, int id)
+{
+    Report r;
+    char path[100]="";
+    strcpy(path,district);
+    strcat(path,"/reports.dat");
+    struct stat vf;
+    if(stat(path,&vf)!=0)
+    {
+        printf("Nu exista districtul %s\n",district);
+        return ;
+    }
+
+    int are_drepturi=0;
+    if(strcmp(role,"manager")==0 && (vf.st_mode & S_IRUSR)) are_drepturi=1;
+    else if (strcmp(role,"inspector")==0 && (vf.st_mode & S_IRGRP)) are_drepturi=1;
+
+    if (are_drepturi==0)
+    {
+        printf("Rolul %s nu are permisiuni de citire in reports.dat!\n", role);
+        exit(1);
+    }
+
+    int f1=open(path,O_RDONLY);
+    while(read(f1,&r,sizeof(Report))==sizeof(Report))
+    {
+        if(r.id==id)
+        {
+            printf("---------------\n");
+            printf("ID: %d\n",r.id);
+            printf("Name: %s\n",r.name);
+            printf("Latitude: %f\n",r.latitude);
+            printf("Longitude: %f\n",r.longitude);
+            printf("Issue: %s\n",r.issue);
+            printf("Severity: %d\n",r.severity);
+            printf("Timestamp: %s",ctime(&r.timestamp));
+            printf("Description: %s\n",r.description);
+            close(f1);
+            return ;
+        }
+    }
+    printf("Nu exista raport cu id-ul %d\n",id);
+    close(f1);
+}
+
+void update_treshhold(char *district,char *role,int value)
+{
+    if(strcmp(role,"manager")!=0)return ;
+    char path[100]="";
+    strcpy(path,district);
+    strcat(path,"/district.cfg");
+    struct stat vf;
+    if(stat(path,&vf)!=0)
+    {
+        printf("Nu exista fisierul de configurare/districtul %s\n",district);
+        return ;
+    }
+
+    if((vf.st_mode & 0777) != 0640)
+    {
+        printf("Fisierul nu are permisiunile bune\n");
+        exit(1);
+    }
+
+    int f1=open(path,O_WRONLY | O_TRUNC);
+    if(f1==-1)
+    {
+        printf("Eroare deschidere fisier");
+        return;
+    }
+
+    char buf[50];
+    snprintf(buf,sizeof(buf),"%d\n",value);
+    write(f1,buf,strlen(buf));
+    close(f1);
 }
 
 int main(int argc,char *argv[])
@@ -193,24 +313,67 @@ int main(int argc,char *argv[])
         printf("Clar prea putine argumente\n");
         exit(1);
     }
-    char *role = argv[3];
-    char *user = argv[5];
-    char *comanda = argv[6];
+    char *role = argv[2];
+    char *user = argv[4];
+    char *comanda = argv[5];
     if(strcmp(comanda,"--add")==0)
     {
         if(argc<12)
         {
-            printf("Prea putine argumente pt add\n");
+            printf("Prea putine argumente pentru add\n");
             exit(1);
         }
-        char *district = argv[7];
-        char *category = argv[10];
-        char *description = argv[12];
-        float latitude = atof(argv[8]);
-        float longitude = atof(argv[9]);
-        int severity = atoi(argv[11]);
+        char *district = argv[6];
+        char *category = argv[9];
+        char *description = argv[11];
+        float latitude = atof(argv[7]);
+        float longitude = atof(argv[8]);
+        int severity = atoi(argv[10]);
         add(district,role,user,latitude,longitude,category,severity,description);
-        //void add(char *district,char* role,char *user,float latitude,float longitude, char *category,int severity, char *description)
-        //./p --role manager --user dog --add deva 1.3 5.6 copac 2 "rip brr brr patapim"
+
+    }
+    else if(strcmp(comanda,"--list")==0)
+    {
+        if(argc<7)
+        {
+            printf("Prea putine argumente pentru list\n");
+            exit(1);
+        }
+        char *district = argv[6];
+        list(district,role);
+    }
+    else if(strcmp(comanda,"--remove_report")==0)
+    {
+        if(argc<8)
+        {
+            printf("Prea putine argumente pentru remove_report\n");
+            exit(1);
+        }
+        char *district = argv[6];
+        int id=atoi(argv[7]);
+        remove_report(district,role,id);
+    }
+    else if(strcmp(comanda,"--view")==0)
+    {
+        if(argc<8)
+        {
+            printf("Prea putine argumente pentru view\n");
+            exit(1);
+        }
+        char *district=argv[6];
+        int id=atoi(argv[7]);
+        view(district,role,id);
+    }
+    else if(strcmp(comanda,"--update_threshhold")==0)
+    {
+        if(argc<8)
+        {
+            printf("Prea putine argumente pentru update_treshhold\n");
+            exit(1);
+        }
+        char *district=argv[6];
+        int value=atoi(argv[7]);
+        update_treshhold(district,role,value);
+
     }
 }
