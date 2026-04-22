@@ -44,7 +44,7 @@ void bit_to_symbol(mode_t x)
     printf(" | ");
 }
 
-void list(char *district,char *role)
+void list(char *district,char *role,char *user)
 {
     char path[100]="";
     strcpy(path,district);
@@ -85,6 +85,23 @@ void list(char *district,char *role)
         printf("Timestamp: %s",ctime(&r.timestamp));
         printf("Description: %s\n",r.description);
     }
+
+     ////logged_districtint
+    if(strcmp(role,"manager")==0)
+    {
+        strcpy(path,district);
+        strcat(path,"/logged_district");
+        int f3=open(path,O_RDWR|O_CREAT|O_APPEND,0644);
+        fchmod(f3,0644);
+        char s[100];
+        time_t timestamp=time(NULL);
+        char *timp_frumos=ctime(&timestamp);
+        timp_frumos[strlen(timp_frumos)-1]='\0';
+        snprintf(s,sizeof(s),"[%s] %s %s a vizualizat districtul %s.\n",timp_frumos,role,user,district); //creeam stringul
+        write(f3,s,strlen(s));
+        close(f3);
+    }
+
     close(f1);
 
 }
@@ -139,6 +156,7 @@ void add(char *district,char* role,char *user,float latitude,float longitude, ch
     strncpy(r.issue,category,sizeof(r.issue)-1);
     r.issue[sizeof(r.issue)-1]='\0';
 
+    if(severity>3)severity=3;
     r.severity=severity;
     r.timestamp=time(NULL); //citim timpul actual => o sa fie un nr dubios
 
@@ -163,14 +181,15 @@ void add(char *district,char* role,char *user,float latitude,float longitude, ch
 
 
     ////logged_districtint
-    strcpy(path,district);
-    strcat(path,"/logged_district");
     if(strcmp(role,"manager")==0)
     {
+        strcpy(path,district);
+        strcat(path,"/logged_district");
         int f3=open(path,O_RDWR|O_CREAT|O_APPEND,0644);
         fchmod(f3,0644);
         char s[100];
-        char *timp_frumos=ctime(&r.timestamp);
+        time_t timestamp=time(NULL);
+        char *timp_frumos=ctime(&timestamp);
         timp_frumos[strlen(timp_frumos)-1]='\0';
         snprintf(s,sizeof(s),"[%s] %s %s a adaugat un raport.\n",timp_frumos,role,user); //creeam stringul
         write(f3,s,strlen(s));
@@ -179,7 +198,7 @@ void add(char *district,char* role,char *user,float latitude,float longitude, ch
 
 }
 
-void remove_report(char *district,char *role,int id)
+void remove_report(char *district,char *role,char *user,int id)
 {
     if(strcmp(role,"manager")!=0)return ;
 
@@ -214,6 +233,7 @@ void remove_report(char *district,char *role,int id)
         }
         else if(ok)
         {
+            temp.id--;
             lseek(f1,write_pos,SEEK_SET);
             write(f1,&temp,sizeof(Report));
 
@@ -226,10 +246,26 @@ void remove_report(char *district,char *role,int id)
     }
     if(ok)ftruncate(f1,vf.st_size-sizeof(Report));
 
+     ////logged_districtint
+    if(strcmp(role,"manager")==0)
+    {
+        strcpy(path,district);
+        strcat(path,"/logged_district");
+        int f3=open(path,O_RDWR|O_CREAT|O_APPEND,0644);
+        fchmod(f3,0644);
+        char s[100];
+        time_t timestamp=time(NULL);
+        char *timp_frumos=ctime(&timestamp);
+        timp_frumos[strlen(timp_frumos)-1]='\0';
+        snprintf(s,sizeof(s),"[%s] %s %s a sters un raport.\n",timp_frumos,role,user); //creeam stringul
+        write(f3,s,strlen(s));
+        close(f3);
+    }
+
     close(f1);
 }
 
-void view(char *district,char* role, int id)
+void view(char *district,char* role,char *user,int id)
 {
     Report r;
     char path[100]="";
@@ -271,10 +307,27 @@ void view(char *district,char* role, int id)
         }
     }
     printf("Nu exista raport cu id-ul %d\n",id);
+
+     ////logged_districtint
+    if(strcmp(role,"manager")==0)
+    {
+        strcpy(path,district);
+        strcat(path,"/logged_district");
+        int f3=open(path,O_RDWR|O_CREAT|O_APPEND,0644);
+        fchmod(f3,0644);
+        char s[100];
+        time_t timestamp=time(NULL);
+        char *timp_frumos=ctime(&timestamp);
+        timp_frumos[strlen(timp_frumos)-1]='\0';
+        snprintf(s,sizeof(s),"[%s] %s %s a vizualizat districtul %s cu id-ul %d.\n",timp_frumos,role,user,district,id); //creeam stringul
+        write(f3,s,strlen(s));
+        close(f3);
+    }
+
     close(f1);
 }
 
-void update_treshhold(char *district,char *role,int value)
+void update_threshold(char *district,char *role,char *user,int value)
 {
     if(strcmp(role,"manager")!=0)return ;
     char path[100]="";
@@ -303,6 +356,23 @@ void update_treshhold(char *district,char *role,int value)
     char buf[50];
     snprintf(buf,sizeof(buf),"%d\n",value);
     write(f1,buf,strlen(buf));
+
+     ////logged_districtint
+    if(strcmp(role,"manager")==0)
+    {
+        strcpy(path,district);
+        strcat(path,"/logged_district");
+        int f3=open(path,O_RDWR|O_CREAT|O_APPEND,0644);
+        fchmod(f3,0644);
+        char s[100];
+        time_t timestamp=time(NULL);
+        char *timp_frumos=ctime(&timestamp);
+        timp_frumos[strlen(timp_frumos)-1]='\0';
+        snprintf(s,sizeof(s),"[%s] %s %s a dat update la threshold-ul.\n",timp_frumos,role,user); //creeam stringul
+        write(f3,s,strlen(s));
+        close(f3);
+    }
+
     close(f1);
 }
 
@@ -340,7 +410,7 @@ int main(int argc,char *argv[])
             exit(1);
         }
         char *district = argv[6];
-        list(district,role);
+        list(district,role,user);
     }
     else if(strcmp(comanda,"--remove_report")==0)
     {
@@ -351,7 +421,7 @@ int main(int argc,char *argv[])
         }
         char *district = argv[6];
         int id=atoi(argv[7]);
-        remove_report(district,role,id);
+        remove_report(district,role,user,id);
     }
     else if(strcmp(comanda,"--view")==0)
     {
@@ -362,18 +432,23 @@ int main(int argc,char *argv[])
         }
         char *district=argv[6];
         int id=atoi(argv[7]);
-        view(district,role,id);
+        view(district,role,user,id);
     }
-    else if(strcmp(comanda,"--update_threshhold")==0)
+    else if(strcmp(comanda,"--update_threshold")==0)
     {
         if(argc<8)
         {
-            printf("Prea putine argumente pentru update_treshhold\n");
+            printf("Prea putine argumente pentru update_threshold\n");
             exit(1);
         }
         char *district=argv[6];
         int value=atoi(argv[7]);
-        update_treshhold(district,role,value);
+        update_threshold(district,role,user,value);
 
+    }
+    else
+    {
+        printf("Operatie neidentificata\n");
+        exit(1);
     }
 }
