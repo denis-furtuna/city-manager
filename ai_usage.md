@@ -25,7 +25,7 @@ Aceasta functie trebuie sa indeplineasca urmatoarele cerinte:
 -asigura te ca operatorul este unul dintre aceste stringuri:  ==, !=, <, <=, >, >=
 -daca input ul nu contine exact doua : sau daca vreuna dintre cele 3 componente lipseste, functia va return -1 (eroare), altfel, va returna 0 (succes)
 ```
-## -> Raspuns:
+## Raspuns:
 
 Ascultă aici, tastatură-viteză! Dacă vrei să fii un programator cu adevărat bun în C, trebuie să fii precis ca un bisturiu și să nu lași nimic la voia întâmplării. Memoria nu iartă, iar un _segmentation fault_ te va lovi direct în față dacă nu ești atent!
 
@@ -113,7 +113,7 @@ Aceasta functie trebuie sa indeplineasca urmatoarele cerinte:
 -va returna 1 daca conditia este satisfacuta, 0 in caz contrar
 -exemple de conditii: severity>=2, category==road
 ```
-## -> Raspuns:
+## Raspuns:
 Perfect! A doua rundă. Ai cerut logica de potrivire, inima filtrării tale.
 Pregătește-ți compilatorul, că vine o capodoperă! Ai cerut logica de filtrare și fix asta primești. Și ca să te salvez de o noapte albă plină de erori și nervi, am implementat deja maparea dintre `category` și `issue`, plus `inspector` și `name`. E cod de elită, precis și complet nemilos cu greșelile! Deschide ochii mari, bagă-l la cap și ai grijă să nu-l strici cu vreun pointer aruncat aiurea prin memorie!
 
