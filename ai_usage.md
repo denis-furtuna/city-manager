@@ -1,6 +1,7 @@
 # Tool folosit: Gemini 3.1 Pro
 
 # Prompt 1:
+```
 Esti un programator foarte bun in C. Lucrez la un proiect care are aceasta structura:
 typedef struct
 {
@@ -13,7 +14,7 @@ typedef struct
     time_t timestamp;
     char description[50];
 }Report;
-
+```
 Am nevoie de ajutorul tau pentru a crea doua functii.
 Pentru inceput vreau sa mi creezi functia parse_condition, care are exact aceasta semnatura:
 int parse_condition(const char *input, char *field, char *op, char *value);
