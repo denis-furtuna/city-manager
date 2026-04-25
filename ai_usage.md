@@ -14,7 +14,7 @@ typedef struct
     time_t timestamp;
     char description[50];
 }Report;
-```
+
 Am nevoie de ajutorul tau pentru a crea doua functii.
 Pentru inceput vreau sa mi creezi functia parse_condition, care are exact aceasta semnatura:
 int parse_condition(const char *input, char *field, char *op, char *value);
@@ -24,7 +24,7 @@ Aceasta functie trebuie sa indeplineasca urmatoarele cerinte:
 -asigura te ca field ul este unul dintre aceste stringuri: severity, category, inspector, timestamp 
 -asigura te ca operatorul este unul dintre aceste stringuri:  ==, !=, <, <=, >, >=
 -daca input ul nu contine exact doua : sau daca vreuna dintre cele 3 componente lipseste, functia va return -1 (eroare), altfel, va returna 0 (succes)
-
+```
 ## Raspuns:
 
 Ascultă aici, tastatură-viteză! Dacă vrei să fii un programator cu adevărat bun în C, trebuie să fii precis ca un bisturiu și să nu lași nimic la voia întâmplării. Memoria nu iartă, iar un _segmentation fault_ te va lovi direct în față dacă nu ești atent!
@@ -103,6 +103,7 @@ int parse_condition(const char *input, char *field, char *op, char *value) {
 Acum pune mâna, integrează codul ăsta, compilează-l cu `-Wall -Wextra` și treci la treabă! Aștept să îmi zici care e a doua funcție pe care trebuie să o facem, dar scrie specificațiile clar și tăios!
 
 # Prompt 2:
+```
 A doua functie va fi match_condition, care are exact aceasta semnatura:
 int match_condition(Report *r, const char *field, const char *op, const char *value);
 Structura Report este cea din prompt ul anterior.
@@ -111,7 +112,7 @@ Aceasta functie trebuie sa indeplineasca urmatoarele cerinte:
 -cerinta imi impune ca field sa fie una dintre valorile: severity, category, inspector, timestamp, dar unele campurile din structura mea Report difera. category este campul issue, inspector este campul name
 -va returna 1 daca conditia este satisfacuta, 0 in caz contrar
 -exemple de conditii: severity>=2, category==road
-
+```
 ## Raspuns:
 Perfect! A doua rundă. Ai cerut logica de potrivire, inima filtrării tale.
 Pregătește-ți compilatorul, că vine o capodoperă! Ai cerut logica de filtrare și fix asta primești. Și ca să te salvez de o noapte albă plină de erori și nervi, am implementat deja maparea dintre `category` și `issue`, plus `inspector` și `name`. E cod de elită, precis și complet nemilos cu greșelile! Deschide ochii mari, bagă-l la cap și ai grijă să nu-l strici cu vreun pointer aruncat aiurea prin memorie!
@@ -199,8 +200,11 @@ int match_condition(Report *r, const char *field, const char *op, const char *va
 Ia codul ăsta, integrează-l în proiectul tău, dă-i un `gcc` curat și termină treaba! Ce funcție vrei să mai facem, sau te descurci de aici singur?
 
 # Ce am schimbat:
+```
 La functia match_condition nu are rost sa mai verific daca campurile field, op sau value sunt NULL. Daca s ar intampla acest caz, functia parse_condition ar returna -1, iar programul va da exit.
-
+```
 # Ce am invatat:
+```
 Am invatat o noua abordare pentru impartirea unui string in bucati. Folosind strchr aflu adresa unde se afla ':' in string, apoi, in functie de aceste adrese, impart stringul in 3 bucati. Daca as fi facut singur, cel mai probabil as fi folosit sscanf sau strtok.
 De asemnea, prin intermediul acestei cerinte, am invatat cum sa scriu prompt uri mult mai bune.
+```
