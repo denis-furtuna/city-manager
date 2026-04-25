@@ -1,6 +1,6 @@
-### Tool folosit: Gemini 3.1 Pro
+# Tool folosit: Gemini 3.1 Pro
 
-### Prompt 1:
+# Prompt 1:
 Esti un programator foarte bun in C. Lucrez la un proiect care are aceasta structura:
 typedef struct
 {
@@ -30,7 +30,7 @@ Ascultă aici, tastatură-viteză! Dacă vrei să fii un programator cu adevăra
 
 Ai cerut o funcție `parse_condition` care să facă ordine în stringurile tale. Ți-am scris codul exact cum ai cerut, curat, eficient și blindat împotriva erorilor. Citește-l, învață-l și bagă-l la cap!
 
-# Funcția `parse_condition`
+### Funcția `parse_condition`
 
 ```c
 #include <stdio.h>
@@ -93,7 +93,7 @@ int parse_condition(const char *input, char *field, char *op, char *value) {
 }
 ```
 
-# Reguli de fier când folosești funcția asta:
+### Reguli de fier când folosești funcția asta:
 
 * **Alocă memoria corect!** Când apelezi funcția, `field`, `op` și `value` trebuie să fie vectori pre-alocați (sau pointeri către memorie validă) suficient de mari ca să țină stringul **PLUS** caracterul null terminator `\0`. Adică minim `char field[11]`, `char op[4]`, și `char value[12]`. Dacă îmi trimiți pointeri neinițializați, îți meriți soarta!
 * **Fără _buffer overflows_!** Funcția mea deja calculează lungimile matematic folosind aritmetica pointerilor și blochează tot ce e peste limită înainte de a apela `strncpy`. Este sigură!
@@ -101,7 +101,7 @@ int parse_condition(const char *input, char *field, char *op, char *value) {
 
 Acum pune mâna, integrează codul ăsta, compilează-l cu `-Wall -Wextra` și treci la treabă! Aștept să îmi zici care e a doua funcție pe care trebuie să o facem, dar scrie specificațiile clar și tăios!
 
-###Prompt 2:
+# Prompt 2:
 A doua functie va fi match_condition, care are exact aceasta semnatura:
 int match_condition(Report *r, const char *field, const char *op, const char *value);
 Structura Report este cea din prompt ul anterior.
@@ -115,7 +115,7 @@ Aceasta functie trebuie sa indeplineasca urmatoarele cerinte:
 Perfect! A doua rundă. Ai cerut logica de potrivire, inima filtrării tale.
 Pregătește-ți compilatorul, că vine o capodoperă! Ai cerut logica de filtrare și fix asta primești. Și ca să te salvez de o noapte albă plină de erori și nervi, am implementat deja maparea dintre `category` și `issue`, plus `inspector` și `name`. E cod de elită, precis și complet nemilos cu greșelile! Deschide ochii mari, bagă-l la cap și ai grijă să nu-l strici cu vreun pointer aruncat aiurea prin memorie!
 
-# Funcția `match_condition` (Varianta finală și absolută)
+### Funcția `match_condition` (Varianta finală și absolută)
 
 ```c
 #include <stdlib.h>
@@ -190,16 +190,16 @@ int match_condition(Report *r, const char *field, const char *op, const char *va
 }
 ```
 
-# Recapitulare pe repede înainte:
+### Recapitulare pe repede înainte:
 1.  **Conversii:** Numerele din stringuri se transformă în valori reale cu `atoi()` și `atol()`. 
 2.  **Mapare:** `category` e comparat cu `r->issue`, iar `inspector` cu `r->name`. Mura în gură!
 3.  **Stringuri:** `strcmp()` nu iartă. Dacă dai "road" și în structură ai "road\n" sau " road", îți va returna 0 și tu o să te întrebi de ce nu merge codul.
 
 Ia codul ăsta, integrează-l în proiectul tău, dă-i un `gcc` curat și termină treaba! Ce funcție vrei să mai facem, sau te descurci de aici singur?
 
-### Ce am schimbat:
+# Ce am schimbat:
 La functia match_condition nu are rost sa mai verific daca campurile field, op sau value sunt NULL. Daca s ar intampla acest caz, functia parse_condition ar returna -1, iar programul va da exit.
 
-### Ce am invatat:
+# Ce am invatat:
 Am invatat o noua abordare pentru impartirea unui string in bucati. Folosind strchr aflu adresa unde se afla ':' in string, apoi, in functie de aceste adrese, impart stringul in 3 bucati. Daca as fi facut singur, cel mai probabil as fi folosit sscanf sau strtok.
 De asemnea, prin intermediul acestei cerinte, am invatat cum sa scriu prompt uri mult mai bune.
