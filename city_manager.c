@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/wait.h>
 typedef struct
 {
     int id;
@@ -244,7 +245,7 @@ void add(char *district,char* role,char *user,float latitude,float longitude, ch
         int f2=open(path,O_RDWR|O_CREAT,0640);
         fchmod(f2,0640);
         char buf[] = "2\n";
-        write(f2, buf, strlen(buf)); //severity default value
+        write(f2, buf, strlen(buf)); //val de severitate
         close(f2);
     }
 
@@ -553,6 +554,30 @@ void filter(char *district,char *role, char *user,int argc,char *argv[])
 
 }
 
+void rm_district(char *district, char* role, char *user)
+{
+    if(strcmp(role,"manager")!=0)return ;
+
+    char path[100]="";
+    strcpy(path,"active_reports-");
+    strcat(path,district);
+
+    pid_t pid=fork();
+    if(pid<0)
+    {
+        return ;
+    }
+    if(pid==0)
+    {
+        execlp("rm","rm","-rf",district,path,NULL);
+        exit(1);
+    }
+    int st;
+    wait(&st);
+    scrie_in_log(district,role,user,"a sters un district");
+
+}
+
 int main(int argc,char *argv[])
 {
     if(argc<7)
@@ -656,9 +681,13 @@ int main(int argc,char *argv[])
         if(verificare_symlink(district)==1)printf("Nu e dangling link!\n");
         else printf("Acest link doar link bun nu e!\n");
     }
+    else if(strcmp(comanda,"--remove_district")==0)
+    {
+        rm_district(district,role,user);
+    }
     else
     {
-        printf("Operatie neidentificata\n");
+        printf("Operatie neidentificata: '%s'\n",comanda);
         exit(1);
     }
 }
