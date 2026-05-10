@@ -249,7 +249,35 @@ void add(char *district,char* role,char *user,float latitude,float longitude, ch
         close(f2);
     }
 
-    scrie_in_log(district,role,user,"a adaugat un raport.");
+
+    int f_monitor=open(".monitor_pid",O_RDONLY);
+    if(f_monitor==-1)
+    {
+        printf("Eroare deschidere fisier .monitor_pid\n");
+        scrie_in_log(district,role,user,"a adaugat un raport. Monitorul nu a putut fi informat!");
+        return;
+    }
+
+    char buf[11]={0};
+    int bytes_cititi=read(f_monitor,buf,10);
+    close(f_monitor);
+
+    if(bytes_cititi<=0)
+    {
+        printf("Eroare citire sau fisierul .monitor_pid este gol\n");
+        scrie_in_log(district,role,user,"a adaugat un raport. Monitorul nu a putut fi informat!");
+        return ;
+    }
+
+    int pid_extras=atoi(buf);
+    if(kill(pid_extras,SIGUSR1)==-1) //trimitem semnalul la procesul din monitor_reports si verificam daca o dat gres
+    {
+        printf("Eroare trimitere semnal\n");
+        scrie_in_log(district,role,user,"a adaugat un raport. Monitorul nu a putut fi informat!");
+        return ;
+    }
+
+    scrie_in_log(district,role,user,"a adaugat un raport. Monitorul a fost informat!");
 }
 
 void remove_report(char *district,char *role,char *user,int id)
@@ -574,9 +602,9 @@ void rm_district(char *district, char* role, char *user)
     }
     int st;
     wait(&st);
-    scrie_in_log(district,role,user,"a sters un district");
-
 }
+
+
 
 int main(int argc,char *argv[])
 {
