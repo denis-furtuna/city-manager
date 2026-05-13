@@ -3,6 +3,7 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <stdlib.h>
+#include <sys/stat.h>
 #include <string.h>
 void tratare(int p)
 {
@@ -12,9 +13,9 @@ void tratare(int p)
 void tratare_moarte(int p)
 {
     unlink(".monitor_pid");
-    write(1,"Gata cu programul, gata cu .monitor_pid\n",40);
+    write(1,"END: Gata cu programul, gata cu .monitor_pid\n",40);
     //printf("Gata cu programul, gata cu .monitor_pid\n");
-    exit(1);
+    exit(0);//0 - succes, 1- eroare
 }
 int main()
 {
@@ -22,6 +23,13 @@ int main()
 
     char path[100]="";
     strcpy(path,".monitor_pid");
+
+    struct stat vf;
+    if(lstat(".monitor_pid",&vf)==0)
+    {
+        printf("Exisata deja un monitor deschis!\n");
+        exit(1);
+    }
     int f1=open(path,O_WRONLY|O_CREAT|O_TRUNC,0644);
     if(f1==-1)
     {
