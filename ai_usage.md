@@ -370,3 +370,10 @@ Dacă îi spui programului tău doar să creeze un fișier și să seteze niște
     Folosește funcția pause() în interiorul buclei. Asta e tactica supremă: pune soldatul să doarmă, nu consumă nicio resursă, iar când apare un semnal, sistemul îl trezește automat cu un șut!
 
 Adună-ți bibliotecile necesare (unistd.h, signal.h, etc.), gândește structura și arată-mi că poți transforma cuvintele astea într-o armură de cod! La treabă! Executare!
+
+# Phase 3: Pipes and Redirects 
+## -> Tool folosit: Gemini 3.1 Pro
+## -> Cum l-am folosit?
+```
+    Am folosit fix aceeasi strategie ca la Phase 2.
+```
