@@ -375,5 +375,6 @@ Adună-ți bibliotecile necesare (unistd.h, signal.h, etc.), gândește structur
 ## -> Tool folosit: Gemini 3.1 Pro
 ## -> Cum l-am folosit?
 ```
-    Am folosit fix aceeasi strategie ca la Phase 2.
+    Am folosit fix aceeasi strategie ca la Phase 2. L am folosit ca si mentor, fara a mi genera cod.
+    Cel mai valoros feedback a fost în functia calculate_scores, unde mi-a explicat pericolul de deadlock daca folosesc wait() inainte de a inchide teava de citire, si de ce este absolut necesar sa folosesc un numar de wait()-uri egal cu numarul de fork()-uri pentru a evita crearea de procese zombie in memorie.
 ```
