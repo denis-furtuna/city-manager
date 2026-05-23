@@ -604,6 +604,76 @@ void rm_district(char *district, char* role, char *user)
     wait(&st);
 }
 
+typedef struct Inspector
+{
+    char nume[30];
+    int scor;
+}INSPECTOR;
+
+int cauta_inspector(INSPECTOR *ins,char *nume,int contor)
+{
+    for(int i=0;i<contor;++i)
+        if(strcmp(nume,ins[i].nume)==0)return i;
+    return -1;
+}
+void scorer(char *district,char* role,char *user)
+{
+    Report r;
+    char path[100]="";
+    strcpy(path,district);
+    strcat(path,"/reports.dat");
+    struct stat vf;
+    if(stat(path,&vf)!=0)
+    {
+        printf("Nu exista districtul %s\n",district);
+        return ;
+    }
+
+    int are_drepturi=0;
+    if(strcmp(role,"manager")==0 && (vf.st_mode & S_IRUSR)) are_drepturi=1;
+    else if (strcmp(role,"inspector")==0 && (vf.st_mode & S_IRGRP)) are_drepturi=1;
+
+    if (are_drepturi==0)
+    {
+        printf("Rolul %s nu are permisiuni de citire in reports.dat!\n", role);
+        exit(1);
+    }
+
+    int f1=open(path,O_RDONLY);
+
+    INSPECTOR ins[100];
+    int contor=0;
+    int index;
+    //iau toate numele din report, chiar daca nu s inspectori din cauza ca Phase 1 nu mentioneaza sa salvez structura rol in reports.
+    while(read(f1,&r,sizeof(Report))==sizeof(Report))
+    {
+        //if(strcmp(r.role,"inspector")==0)  cazul daca salvam rolul
+            if(((index=cauta_inspector(ins,r.name,contor))==-1) && contor<100)
+            {
+                strcpy(ins[contor].nume,r.name);
+                ins[contor++].scor=r.severity;
+            }
+            else if(index!=-1)
+            {
+                ins[index].scor+=r.severity;
+            }
+
+    }
+    if(contor==100)
+    {
+        printf("Limita depasita de inspectori! Fac scorul doar la primii 100\n");
+
+    }
+
+    printf("District: %s\n",district);
+    for(int i=0;i<contor;++i)
+    {
+        printf("  ->Inspector %s, scor: %d\n",ins[i].nume,ins[i].scor);
+    }
+    printf("\n");
+
+    close(f1);
+}
 
 
 int main(int argc,char *argv[])
@@ -712,6 +782,10 @@ int main(int argc,char *argv[])
     else if(strcmp(comanda,"--remove_district")==0)
     {
         rm_district(district,role,user);
+    }
+    else if(strcmp(comanda,"--scorer")==0)
+    {
+        scorer(district,role,user);
     }
     else
     {

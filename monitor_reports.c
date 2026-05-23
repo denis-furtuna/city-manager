@@ -13,7 +13,7 @@ void tratare(int p)
 void tratare_moarte(int p)
 {
     unlink(".monitor_pid");
-    write(1,"END: Gata cu programul, gata cu .monitor_pid\n",40);
+    write(1,"END: Gata cu programul, gata cu .monitor_pid\n",45);
     //printf("Gata cu programul, gata cu .monitor_pid\n");
     exit(0);//0 - succes, 1- eroare
 }
@@ -27,7 +27,13 @@ int main()
     struct stat vf;
     if(lstat(".monitor_pid",&vf)==0)
     {
-        printf("Exisata deja un monitor deschis!\n");
+        int id=open(".monitor_pid",O_RDONLY);
+        char buf[10];
+        int r=read(id,buf,10);
+        if(r>=0)buf[r]=0;
+
+        printf("END: Exista deja un monitor deschis! ID: %s",buf);
+        close(id);
         exit(1);
     }
     int f1=open(path,O_WRONLY|O_CREAT|O_TRUNC,0644);
