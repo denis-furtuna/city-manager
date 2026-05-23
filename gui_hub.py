@@ -1,17 +1,20 @@
 import threading
 import customtkinter as ctk
 import paramiko
+import os
+from dotenv import load_dotenv
 
 # Setările vizuale pentru panoul de control
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
 
-# Datele de conectare la serverul Linux
-HOST_IP = "192.168.1.135"
-USER = "debian"
-PASS = "debian"
-PROJECT_PATH = "/home/debian/SO/proiect"
+# Încarcă datele din .env
+load_dotenv()
 
+HOST_IP = os.getenv("SSH_HOST")
+USER = os.getenv("SSH_USER")
+PASS = os.getenv("SSH_PASS")
+PROJECT_PATH = "/home/debian/SO/proiect"
 
 def execute_remote_command(command):
     """Execută o comandă prin SSH și returnează output-ul, fără să blocheze execuția."""
