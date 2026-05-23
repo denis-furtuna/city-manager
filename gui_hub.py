@@ -2,11 +2,11 @@ import threading
 import customtkinter as ctk
 import paramiko
 
-# Setările vizuale
+# Setările vizuale pentru panoul de control
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")
 
-# Coordonatele serverului Linux
+# Datele de conectare la serverul Linux
 HOST_IP = "192.168.1.135"
 USER = "debian"
 PASS = "debian"
@@ -14,7 +14,7 @@ PROJECT_PATH = "/home/debian/SO/proiect"
 
 
 def execute_remote_command(command):
-    """Execută o comandă unică prin SSH și returnează rezultatul."""
+    """Execută o comandă prin SSH și returnează output-ul, fără să blocheze execuția."""
     try:
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -27,7 +27,7 @@ def execute_remote_command(command):
 
         return errors if errors else output
     except Exception as e:
-        return f"Eroare rețea: {str(e)}"
+        return f"Eroare comunicație SSH: {str(e)}"
 
 
 class CommandHub(ctk.CTk):
@@ -35,7 +35,7 @@ class CommandHub(ctk.CTk):
         super().__init__()
 
         self.title("City Manager - Control Panel")
-        self.geometry("1300x850")  # Am mărit puțin lățimea ca să încapă 3 terminale frumos
+        self.geometry("1300x850")
 
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
@@ -43,10 +43,10 @@ class CommandHub(ctk.CTk):
         self.active_districts = []
         self.checkbox_vars = []
 
-        # --- PANOU LATERAL ---
+        # --- PANOU LATERAL (MENIUL PRINCIPAL) ---
         self.sidebar_frame = ctk.CTkFrame(self, width=220, corner_radius=0)
         self.sidebar_frame.grid(row=0, column=0, sticky="nsew")
-        self.sidebar_frame.grid_rowconfigure(5, weight=1)
+        self.sidebar_frame.grid_rowconfigure(6, weight=1)
 
         self.logo_label = ctk.CTkLabel(self.sidebar_frame, text="CITY HUB\nDashboard",
                                        font=ctk.CTkFont(size=22, weight="bold"))
@@ -55,33 +55,36 @@ class CommandHub(ctk.CTk):
         self.btn_add = ctk.CTkButton(self.sidebar_frame, text="Adăugare Raport", command=self.show_add_frame)
         self.btn_add.grid(row=1, column=0, padx=20, pady=10)
 
-        self.btn_list = ctk.CTkButton(self.sidebar_frame, text="Baza de Date", command=self.show_list_frame)
+        self.btn_list = ctk.CTkButton(self.sidebar_frame, text="Baza de Date (--list)", command=self.show_list_frame)
         self.btn_list.grid(row=2, column=0, padx=20, pady=10)
+
+        self.btn_adv = ctk.CTkButton(self.sidebar_frame, text="Operațiuni Avansate", command=self.show_advanced_frame,
+                                     fg_color="#5e35b1", hover_color="#4527a0")
+        self.btn_adv.grid(row=3, column=0, padx=20, pady=10)
 
         self.btn_scores = ctk.CTkButton(self.sidebar_frame, text="Performanță Inspectori",
                                         command=self.show_scores_frame)
-        self.btn_scores.grid(row=3, column=0, padx=20, pady=10)
+        self.btn_scores.grid(row=4, column=0, padx=20, pady=10)
 
         self.status_label = ctk.CTkLabel(self.sidebar_frame, text="Monitor: OFFLINE", text_color="red",
                                          font=ctk.CTkFont(weight="bold"))
-        self.status_label.grid(row=6, column=0, padx=20, pady=5)
+        self.status_label.grid(row=7, column=0, padx=20, pady=5)
 
         self.btn_start_monitor = ctk.CTkButton(self.sidebar_frame, text="Pornire Monitor", command=self.start_monitor,
                                                fg_color="#2e7d32", hover_color="#1b5e20")
-        self.btn_start_monitor.grid(row=7, column=0, padx=20, pady=5)
+        self.btn_start_monitor.grid(row=8, column=0, padx=20, pady=5)
 
         self.btn_stop_monitor = ctk.CTkButton(self.sidebar_frame, text="Oprire Monitor", command=self.stop_monitor,
                                               fg_color="#b71c1c", hover_color="#7f0000", state="disabled")
-        self.btn_stop_monitor.grid(row=8, column=0, padx=20, pady=(5, 20))
+        self.btn_stop_monitor.grid(row=9, column=0, padx=20, pady=(5, 20))
 
-        # --- ZONA DREAPTĂ (Workspace sus + Terminale jos) ---
+        # --- ZONA DREAPTĂ (Workspace + Terminale) ---
         self.right_panel = ctk.CTkFrame(self, fg_color="transparent")
         self.right_panel.grid(row=0, column=1, padx=20, pady=20, sticky="nsew")
-        self.right_panel.grid_rowconfigure(0, weight=3)  # Zona formularelor
-        self.right_panel.grid_rowconfigure(1, weight=2)  # Zona terminalelor
+        self.right_panel.grid_rowconfigure(0, weight=3)
+        self.right_panel.grid_rowconfigure(1, weight=2)
         self.right_panel.grid_columnconfigure(0, weight=1)
 
-        # Workspace
         self.workspace_frame = ctk.CTkFrame(self.right_panel, corner_radius=10)
         self.workspace_frame.grid(row=0, column=0, sticky="nsew", pady=(0, 10))
 
@@ -89,7 +92,7 @@ class CommandHub(ctk.CTk):
                                        font=ctk.CTkFont(size=18))
         self.main_label.pack(expand=True)
 
-        # Split Terminal Frame (Acum cu 3 coloane!)
+        # Tabloul de bord (3 terminale)
         self.console_container = ctk.CTkFrame(self.right_panel, fg_color="transparent")
         self.console_container.grid(row=1, column=0, sticky="nsew")
         self.console_container.grid_columnconfigure(0, weight=1)
@@ -97,21 +100,18 @@ class CommandHub(ctk.CTk):
         self.console_container.grid_columnconfigure(2, weight=1)
         self.console_container.grid_rowconfigure(1, weight=1)
 
-        # Terminal 1: Monitor Live (Stânga - Verde)
         self.lbl_mon = ctk.CTkLabel(self.console_container, text="[ monitor log ]", font=ctk.CTkFont(weight="bold"))
         self.lbl_mon.grid(row=0, column=0, padx=(0, 5), pady=0, sticky="w")
         self.monitor_console = ctk.CTkTextbox(self.console_container, font=ctk.CTkFont(family="Consolas", size=12),
                                               text_color="#00ff00", fg_color="#121212")
         self.monitor_console.grid(row=1, column=0, padx=(0, 5), sticky="nsew")
 
-        # Terminal 2: City Manager (Mijloc - Galben)
         self.lbl_mgr = ctk.CTkLabel(self.console_container, text="[ city_manager ]", font=ctk.CTkFont(weight="bold"))
         self.lbl_mgr.grid(row=0, column=1, padx=5, pady=0, sticky="w")
         self.manager_console = ctk.CTkTextbox(self.console_container, font=ctk.CTkFont(family="Consolas", size=12),
                                               text_color="#ffff00", fg_color="#121212")
         self.manager_console.grid(row=1, column=1, padx=5, sticky="nsew")
 
-        # Terminal 3: City Hub (Dreapta - Cyan)
         self.lbl_hub = ctk.CTkLabel(self.console_container, text="[ city_hub ]", font=ctk.CTkFont(weight="bold"))
         self.lbl_hub.grid(row=0, column=2, padx=(5, 0), pady=0, sticky="w")
         self.hub_console = ctk.CTkTextbox(self.console_container, font=ctk.CTkFont(family="Consolas", size=12),
@@ -120,21 +120,14 @@ class CommandHub(ctk.CTk):
 
         self.stop_wiretap = False
 
-        # Scanăm districtele la pornire
         self._run_async(self._async_scan_districts)
 
     def _run_async(self, target, *args):
         threading.Thread(target=target, args=args, daemon=True).start()
 
     def append_to_console(self, target_console, text):
-        """Scrie textul în terminalul specificat (monitor, manager sau hub)."""
-        if target_console == "monitor":
-            console = self.monitor_console
-        elif target_console == "manager":
-            console = self.manager_console
-        else:
-            console = self.hub_console
-
+        console = self.monitor_console if target_console == "monitor" else (
+            self.manager_console if target_console == "manager" else self.hub_console)
         console.insert("end", text + "\n")
         console.see("end")
 
@@ -259,7 +252,7 @@ class CommandHub(ctk.CTk):
             return
 
         self.btn_submit.configure(state="disabled")
-        self.append_to_console("manager", f"> Exercițiu comandă: adăugare raport în {dist}...")
+        self.append_to_console("manager", f"> Procesare: adăugare raport în {dist}...")
         self._run_async(self._async_submit_report, role, user, dist, lat, lon, cat, sev, desc)
 
     def _async_submit_report(self, role, user, dist, lat, lon, cat, sev, desc):
@@ -274,7 +267,7 @@ class CommandHub(ctk.CTk):
     def show_list_frame(self):
         for widget in self.workspace_frame.winfo_children(): widget.destroy()
 
-        title = ctk.CTkLabel(self.workspace_frame, text="Vizualizare Rapoarte",
+        title = ctk.CTkLabel(self.workspace_frame, text="Vizualizare Rapoarte (--list)",
                              font=ctk.CTkFont(size=20, weight="bold"))
         title.pack(pady=(15, 5))
 
@@ -293,16 +286,79 @@ class CommandHub(ctk.CTk):
             return
 
         self.btn_fetch_list.configure(state="disabled")
-        self.append_to_console("manager", f"> Se procesează lista pentru: {', '.join(selected)}")
         self._run_async(self._async_fetch_list, selected)
 
     def _async_fetch_list(self, selected_districts):
         for dist in selected_districts:
+            self.after(0, self.append_to_console, "manager", f"> Rulare: --list {dist}")
             cmd = f"cd {PROJECT_PATH} && ./city_manager --role manager --user GUI_Hub --list {dist}"
             raspuns = execute_remote_command(cmd)
-            self.after(0, self.append_to_console, "manager", f"[{dist}]:\n{raspuns.strip()}\n")
+            self.after(0, self.append_to_console, "manager", f"{raspuns.strip()}\n")
 
         self.after(0, lambda: self.btn_fetch_list.configure(state="normal"))
+
+    # --- LOGICA OPERAȚIUNILOR AVANSATE ---
+    def show_advanced_frame(self):
+        for widget in self.workspace_frame.winfo_children(): widget.destroy()
+
+        title = ctk.CTkLabel(self.workspace_frame, text="Operațiuni Avansate Database",
+                             font=ctk.CTkFont(size=20, weight="bold"))
+        title.pack(pady=(15, 10))
+
+        self.opt_action = ctk.CTkOptionMenu(self.workspace_frame, values=[
+            "--view (District + ID)",
+            "--remove_report (District + ID)",
+            "--filter (District + Criteriu)",
+            "--remove_district (Doar District)",
+            "--update_threshold (District + Noua Valoare)"
+        ], width=350)
+        self.opt_action.pack(pady=5)
+        self.opt_action.set("--view (District + ID)")
+
+        districts_list = self.active_districts if self.active_districts else ["Niciun district disponibil"]
+        self.opt_adv_dist = ctk.CTkOptionMenu(self.workspace_frame, values=districts_list, width=350)
+        self.opt_adv_dist.pack(pady=10)
+        self.opt_adv_dist.set(districts_list[0])
+
+        self.entry_adv_param = ctk.CTkEntry(self.workspace_frame,
+                                            placeholder_text="Parametru (ID / Criteriu / Valoare prag)", width=350)
+        self.entry_adv_param.pack(pady=5)
+
+        self.btn_execute_adv = ctk.CTkButton(self.workspace_frame, text="Execută Operațiunea",
+                                             command=self.execute_advanced_ops, fg_color="#5e35b1",
+                                             hover_color="#4527a0")
+        self.btn_execute_adv.pack(pady=15)
+
+    def execute_advanced_ops(self):
+        action_full = self.opt_action.get()
+        dist = self.opt_adv_dist.get()
+        param = self.entry_adv_param.get().strip()
+        action_flag = action_full.split(" ")[0]
+
+        if not self.active_districts or dist == "Niciun district disponibil":
+            self.append_to_console("manager", "[Eroare] Nu ai niciun district în baza de date!")
+            return
+
+        if action_flag in ["--view", "--remove_report", "--filter", "--update_threshold"]:
+            if not param:
+                self.append_to_console("manager", f"[Eroare] Câmpul 'Parametru' este obligatoriu!")
+                return
+            cmd_args = f"{action_flag} {dist} {param}"
+        elif action_flag == "--remove_district":
+            cmd_args = f"{action_flag} {dist}"
+
+        self.btn_execute_adv.configure(state="disabled")
+        self.append_to_console("manager", f"> Executare: {cmd_args}")
+        self._run_async(self._async_execute_advanced_ops, cmd_args, action_flag)
+
+    def _async_execute_advanced_ops(self, cmd_args, action_flag):
+        cmd = f"cd {PROJECT_PATH} && ./city_manager --role manager --user GUI_Hub {cmd_args}"
+        raspuns = execute_remote_command(cmd)
+
+        self.after(0, lambda: self.btn_execute_adv.configure(state="normal"))
+        self.after(0, self.append_to_console, "manager", f"{raspuns.strip()}\n")
+        if action_flag == "--remove_district":
+            self._async_scan_districts()
 
     # --- LOGICA SCORURI INSPECTORI (city_hub REPL) ---
     def show_scores_frame(self):
@@ -327,16 +383,17 @@ class CommandHub(ctk.CTk):
             return
 
         self.btn_fetch_scores.configure(state="disabled")
-        dist_args = " ".join(selected)
-        self.append_to_console("hub", f"> Se calculează scorurile pentru: {dist_args}...")
-        self._run_async(self._async_fetch_scores, dist_args)
+        self.append_to_console("hub", f"> Rulare REPL: calculate_scores {', '.join(selected)}")
+        self._run_async(self._async_fetch_scores, selected)
 
-    def _async_fetch_scores(self, dist_args):
-        cmd = f"cd {PROJECT_PATH} && echo 'calculate_scores {dist_args}' | ./city_hub --role manager --user GUI_Hub"
-        raspuns = execute_remote_command(cmd)
+    def _async_fetch_scores(self, selected_districts):
+        # Pentru fiecare district, executăm comanda de scor în city_hub
+        for dist in selected_districts:
+            cmd = f"cd {PROJECT_PATH} && echo 'calculate_scores {dist}' | ./city_hub --role manager --user GUI_Hub"
+            raspuns = execute_remote_command(cmd)
+            self.after(0, self.append_to_console, "hub", f"[{dist}]:\n{raspuns.strip()}\n")
 
         self.after(0, lambda: self.btn_fetch_scores.configure(state="normal"))
-        self.after(0, self.append_to_console, "hub", f"{raspuns.strip()}\n")
 
 
 if __name__ == "__main__":
