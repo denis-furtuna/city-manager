@@ -109,7 +109,7 @@ void scrie_in_log(char *district,char *role, char *user, char *actiune)
         return ;
     }
 
-    int f3=open(path,O_RDWR|O_CREAT|O_APPEND,0644);
+    int f3=open(path,O_WRONLY|O_CREAT|O_APPEND,0644);
     if(f3==-1)return ;
     fchmod(f3,0644);
 
@@ -142,7 +142,7 @@ void list(char *district,char *role,char *user)
 
     if (are_drepturi==0)
     {
-        printf("ACCES RESPINS: Rolul %s nu are permisiuni de citire in reports.dat!\n", role);
+        printf("Rolul %s nu are permisiuni de citire in reports.dat!\n", role); //nu mentionez si de cazul in care fisierul nu are permisiuni din motive de securitate - information hiding
         exit(1);
     }
 
@@ -193,7 +193,7 @@ void add(char *district,char* role,char *user,float latitude,float longitude, ch
     }
 
     bool ok=false; // ma folosesc de acest ok pentru cazurile cand fisierul abia ce s a creat
-    struct stat st={0};
+    struct stat st;
     if(stat(district,&st)==-1) //vf daca exista fisier
     {
         mkdir(district,0750); //creeam fisier cu cartierul
@@ -238,10 +238,10 @@ void add(char *district,char* role,char *user,float latitude,float longitude, ch
 
 
     ////district.cfg
-    strcpy(path,district);
-    strcat(path,"/district.cfg");
     if(ok)
     {
+        strcpy(path,district);
+        strcat(path,"/district.cfg");
         int f2=open(path,O_RDWR|O_CREAT,0640);
         fchmod(f2,0640);
         char buf[] = "2\n";
@@ -282,7 +282,11 @@ void add(char *district,char* role,char *user,float latitude,float longitude, ch
 
 void remove_report(char *district,char *role,char *user,int id)
 {
-    if(strcmp(role,"manager")!=0)return ;
+    if(strcmp(role,"manager")!=0)
+    {
+        printf("Doar rolul de manager poate sterge!\n");
+        return ;
+    }
 
     Report temp;
     off_t write_pos;
@@ -291,11 +295,14 @@ void remove_report(char *district,char *role,char *user,int id)
     strcpy(path,district);
     strcat(path,"/reports.dat");
     struct stat vf;
-    if(stat(path,&vf)!=0)return ;
+    if(stat(path,&vf)!=0)
+    {
+        printf("Nu exista acest district!\n");
+        return ;
+    }
 
     int are_drepturi=0;
     if(strcmp(role,"manager")==0 && (vf.st_mode & S_IRUSR) && (vf.st_mode & S_IWUSR)) are_drepturi=1;
-
 
     if (are_drepturi==0)
     {
@@ -310,8 +317,8 @@ void remove_report(char *district,char *role,char *user,int id)
         if(!ok && temp.id==id)
         {
             ok=true;
-            write_pos=lseek(f1,0,SEEK_CUR)-sizeof(Report);
-            read_pos=write_pos+sizeof(Report);
+            read_pos=lseek(f1,0,SEEK_CUR);
+            write_pos=read_pos-sizeof(Report);
         }
         else if(ok)
         {
@@ -384,7 +391,12 @@ void view(char *district,char* role,char *user,int id)
 
 void update_threshold(char *district,char *role,char *user,int value)
 {
-    if(strcmp(role,"manager")!=0)return ;
+    if(strcmp(role,"manager")!=0)
+    {
+        printf("Doar rolul de manager poate sterge!\n");
+        return ;
+    }
+
     char path[100]="";
     strcpy(path,district);
     strcat(path,"/district.cfg");
@@ -600,8 +612,7 @@ void rm_district(char *district, char* role, char *user)
         execlp("rm","rm","-rf",district,path,NULL);
         exit(1);
     }
-    int st;
-    wait(&st);
+    wait(NULL);
 }
 
 typedef struct Inspector
@@ -661,7 +672,7 @@ void scorer(char *district,char* role,char *user)
     }
     if(contor==100)
     {
-        printf("Limita depasita de inspectori! Fac scorul doar la primii 100\n");
+        printf("Limita de inspectori a fost atinsa! Fac scorul doar la primii 100\n");
 
     }
 
