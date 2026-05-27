@@ -14,7 +14,7 @@ load_dotenv()
 HOST_IP = os.getenv("SSH_HOST")
 USER = os.getenv("SSH_USER")
 PASS = os.getenv("SSH_PASS")
-PROJECT_PATH = "/home/debian/SO/proiect"
+PROJECT_PATH = "/home/debian/SO/proiect/proiect_final"
 
 def execute_remote_command(command):
     """Execută o comandă prin SSH și returnează output-ul, fără să blocheze execuția."""
@@ -201,11 +201,14 @@ class CommandHub(ctk.CTk):
 
     def _async_stop_monitor(self):
         cmd = f"cd {PROJECT_PATH} && kill -2 $(cat .monitor_pid)"
-        execute_remote_command(cmd)
+        raspuns = execute_remote_command(cmd) # Acum prindem ce scuipă comanda kill!
 
         self.stop_wiretap = True
         if hasattr(self, 'monitor_ssh_client'): self.monitor_ssh_client.close()
         self.after(0, self._update_gui_after_stop)
+        # Dacă monitorul a zis ceva de adio, îl aruncăm pe ecran!
+        if raspuns and raspuns.strip():
+            self.after(0, self.append_to_console, "monitor", f"[SIGINT]: {raspuns.strip()}")
 
     def _update_gui_after_stop(self):
         self.status_label.configure(text="Monitor: OFFLINE", text_color="red")
@@ -390,14 +393,16 @@ class CommandHub(ctk.CTk):
         self._run_async(self._async_fetch_scores, selected)
 
     def _async_fetch_scores(self, selected_districts):
-        # Pentru fiecare district, executăm comanda de scor în city_hub
-        for dist in selected_districts:
-            cmd = f"cd {PROJECT_PATH} && echo 'calculate_scores {dist}' | ./city_hub --role manager --user GUI_Hub"
-            raspuns = execute_remote_command(cmd)
-            self.after(0, self.append_to_console, "hub", f"[{dist}]:\n{raspuns.strip()}\n")
+        # Transformi lista Python ['A', 'B'] într-un string pur de C: "A B"
+        districte_curate = " ".join(selected_districts)
 
+        # Acum injectezi string-ul curat în comandă
+        cmd = f"cd {PROJECT_PATH} && echo 'calculate_scores {districte_curate}' | ./city_hub"
+        raspuns = execute_remote_command(cmd)
+
+        # Randare în interfață
+        self.after(0, self.append_to_console, "hub", f"[{districte_curate}]:\n{raspuns.strip()}\n")
         self.after(0, lambda: self.btn_fetch_scores.configure(state="normal"))
-
 
 if __name__ == "__main__":
     app = CommandHub()
