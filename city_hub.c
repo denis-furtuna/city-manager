@@ -51,6 +51,20 @@ void start_monitor()
     }
 }
 
+
+typedef struct Inspector
+{
+    char nume[30];
+    int scor;
+}INSPECTOR;
+
+int cauta_inspector(INSPECTOR *ins,char *nume,int contor)
+{
+    for(int i=0;i<contor;++i)
+        if(strcmp(nume,ins[i].nume)==0)return i;
+    return -1;
+}
+
 void calculate_scores(char *districte[],int contor)
 {
     int pfd[contor][2];
@@ -76,14 +90,44 @@ void calculate_scores(char *districte[],int contor)
         close(pfd[i][1]);
     }
 
+    INSPECTOR ins[100];
+    int k=0;
+    int index;
     char string[5000];
     for(int i=0;i<contor;++i)
     {
         FILE * f=fdopen(pfd[i][0],"r");
         while(fgets(string,5000,f)!=NULL)
+        {
             printf("%s",string);
-
+            if(strstr(string,"  ->Inspector ")==string)
+            {
+                char nume[30];
+                int scor;
+                if(sscanf(string,"  ->Inspector %29[^,], scor: %d\n",nume,&scor)!=2)
+                {
+                    printf("Eroare citire inspectori\n");
+                    exit(1);
+                }
+                if((index=cauta_inspector(ins,nume,k))==-1 && k<100)
+                {
+                    strcpy(ins[k].nume,nume);
+                    ins[k++].scor=scor;
+                }
+                else if(index!=-1) ins[index].scor+=scor;
+            }
+        }
         fclose(f);
+    }
+    printf("contor: %d\n",k);
+    if(k==100)
+    {
+        printf("Limita de 100 inspectori a fost atinsa! Voi calcula doar pentru primii 100\n");
+    }
+    printf("----------\nRaport general\n");
+    for(int i=0;i<k;++i)
+    {
+        printf("Inspector %s, scor: %d\n",ins[i].nume,ins[i].scor);
     }
 
     for(int i=0;i<contor;++i) //cate forkuri face atatea wait uri avem
