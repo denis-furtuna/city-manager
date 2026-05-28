@@ -37,7 +37,7 @@ Acest script va genera executabilele `monitor`, `city_manager` și `city_hub`.
 pip install -r requirements.txt
 ```
 
-3. Completați credențialele SSH:
+3. În .env completați credențialele SSH:
 
 ```env
 SSH_HOST=ip_server
