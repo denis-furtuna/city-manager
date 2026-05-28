@@ -39,7 +39,7 @@ pip install -r requirements.txt
 
 3. Completați credențialele SSH:
 
-```.env
+```env
 SSH_HOST=ip_server
 SSH_USER=utilizator
 SSH_PASS=parola
